@@ -11,6 +11,11 @@ var borderSize = 20;
 var paddleHeight = 100;
 var paddleWidth = 20;
 var paddleSpeed = 15;
+var p1Score = 0;
+var p2Score = 0
+
+var p1ScoreText;
+var p2ScoreText;
 
 //ball speed   
 var upwardSpeedBall = 0;
@@ -112,7 +117,7 @@ function getRndInteger(min, max) {
 }
 
 //sets the ball speed and direction on setup
-function setBallSpeed() {
+function setBallSpeed(isReset, direction) {
     //set the direction to right
     var sideDirection = 1;
     //set the direction to upward
@@ -121,13 +126,20 @@ function setBallSpeed() {
     if (Math.random() < 0.5) {
         sideDirection = -1;
     }
+    //if it's a reset set the direction against who scored
+    if (isReset) {
+        sideDirection = direction;
+    }
     //if a random number is less than 0.5, then set the direction to upward
     if (Math.random() < 0.5) {
         horizontalDirection = -1;
     }
     //sets the ball speed
-    sideSpeedball = sideDirection * getRndInteger(1, 10);
-    upwardSpeedBall = horizontalDirection * getRndInteger(1, 10);
+    sideSpeedball = sideDirection * getRndInteger(5, 10);
+    upwardSpeedBall = horizontalDirection * getRndInteger(1, 5);
+
+    //reset the multiplier
+    ballSpeedMultiplier = 1;
 }
 
 function ballMovement() {
@@ -135,6 +147,27 @@ function ballMovement() {
     ball.x += sideSpeedball * ballSpeedMultiplier;
     ball.y += upwardSpeedBall * ballSpeedMultiplier;
 
+    //check if p1 conceived a goal
+    if (ball.x < ball.minX) {
+        p2Score++;
+        console.log(p2Score);
+        setBallSpeed(true, 1);
+        ball.x = ball.minX + 130;
+        ball.y = ball.minY + 130;
+        //Draws the Score
+        drawScore();
+    }
+
+    //check if p2 conceived a goal
+    if (ball.x > ball.maxX) {
+        p1Score++;
+        console.log(p1Score);
+        setBallSpeed(true, -1);
+        ball.x = ball.maxX - 130;
+        ball.y = ball.minY + 130;
+        //Draws the Score
+        drawScore();
+    }
     //Determines the ball direction
     if (ball.x < ball.minX || ball.x > ball.maxX) {
         sideSpeedball = sideSpeedball * -1;
@@ -145,19 +178,49 @@ function ballMovement() {
         upwardSpeedBall = upwardSpeedBall * -1;
         ballSpeedMultiplier += 0.01;
     }
+    //TODO need to fix collision detection on paddles
     //Collision detection on the p1 paddle
     if ((ball.x - p1Paddle.x) < paddleWidth && ball.y - ballSize > p1Paddle.y && ball.y < (p1Paddle.y + paddleHeight)) {
-        sideSpeedball = sideSpeedball * -1;     
+        sideSpeedball = sideSpeedball * -1;
     }
 
     //Collision detection on the p2 paddle
-    if ((ball.x + ballSize) > p2Paddle.x && ball.y - ballSize > p2Paddle.y && ball.y < (p2Paddle.y + paddleHeight)) {
+    if ((ball.x + ballSize) > p2Paddle.x && (ball.y - ballSize) > p2Paddle.y && ball.y < (p2Paddle.y + paddleHeight)) {
         sideSpeedball = sideSpeedball * -1;
     }
 }
 
-// Start running the game.  
-setup();
+/*
+    This function draws the player scores in the stage
+*/
+function drawScore() {
+
+    //Removes from the stage
+    stage.removeChild(p1ScoreText);
+    stage.removeChild(p2ScoreText);
+    //sets the font
+    var fontSizeText = 32;
+    //sets the p1 score text
+    p1ScoreText = new PIXI.Text(p1Score, {
+       fontFamily: "Arial",
+       fontSize: fontSizeText,
+       fill: "white"
+    });
+    //sets the p2 score text
+    p2ScoreText = new PIXI.Text(p2Score, {
+        fontFamily: "Arial",
+        fontSize: fontSizeText,
+        fill: "white"
+    });
+
+    //sets the position  
+    p1ScoreText.position.set((width / 2) - 50, 50);
+    p2ScoreText.position.set((width / 2) + 50, 50);   
+    //Adds to the stage
+    stage.addChild(p1ScoreText);
+    stage.addChild(p2ScoreText);
+}
+
 function setup() {
     //append the renderer to the view
     document.body.appendChild(renderer.view);
@@ -165,7 +228,9 @@ function setup() {
     setupScenario();
     gameLoop();
     //set the ball speed
-    setBallSpeed();
+    setBallSpeed(false, 0);
+    //Draws the Score
+    drawScore();
 }
 //Game loop, called at each frame
 function gameLoop() {
@@ -176,5 +241,8 @@ function gameLoop() {
     //Moves the paddles
     paddlesControl();
     //Moves the ball
-    ballMovement()
+    ballMovement()   
 }
+
+// Start running the game.  
+setup();
