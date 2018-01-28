@@ -1,2 +1,2 @@
 # Pong
-Pong in JavaScript using Pixie.js
+Pong in JavaScript using Pixi.js
