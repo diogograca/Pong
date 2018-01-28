@@ -1,14 +1,14 @@
 ﻿// Set the width and height of the scene.
-var width = 1280;
-var height = 800;
+var width = $(window).width() * 0.9;
+var height = $(window).height() * 0.9;;
 //Declares the game objects
 var p1Paddle = new PIXI.Graphics();
 var p2Paddle = new PIXI.Graphics();
 var ball = new PIXI.Graphics();
 //Ball and paddles properties
-var ballSize = 15;
 var borderSize = 20;
-var paddleHeight = 100;
+var paddleHeight = width * 0.08;
+var ballSize = paddleHeight * 0.1;
 var paddleWidth = 20;
 var paddleSpeed = 15;
 var p1Score = 0;
@@ -21,6 +21,7 @@ var p2ScoreText;
 var upwardSpeedBall = 0;
 var sideSpeedball = 0;
 var ballSpeedMultiplier = 1;
+var ballSpeedMultiplierAdd = 0.05;
 
 // Setup the rendering surface.
 var renderer = new PIXI.CanvasRenderer(width, height);
@@ -75,8 +76,8 @@ function setupScenario() {
     ball.drawRect(0, 0, ballSize, ballSize);
     ball.x = (width / 2) + (ballSize / 2);
     ball.y = (height / 2) + (ballSize / 2);
-    ball.maxX = width + ballSize;
-    ball.minX = 0 - ballSize;
+    ball.maxX = width;
+    ball.minX = 0;
     ball.maxY = height - borderSize - ballSize;
     ball.minY = 0 + borderSize;
     ball.endFill();
@@ -168,25 +169,27 @@ function ballMovement() {
         //Draws the Score
         drawScore();
     }
-    //Determines the ball direction
-    if (ball.x < ball.minX || ball.x > ball.maxX) {
-        sideSpeedball = sideSpeedball * -1;
-        ballSpeedMultiplier += 0.01;
-    }
-    //Collision Detection on the top and bottom border
-    if (ball.y < ball.minY || ball.y > ball.maxY) {
-        upwardSpeedBall = upwardSpeedBall * -1;
-        ballSpeedMultiplier += 0.01;
-    }
-    //TODO need to fix collision detection on paddles
+
     //Collision detection on the p1 paddle
-    if ((ball.x - p1Paddle.x) < paddleWidth && ball.y - ballSize > p1Paddle.y && ball.y < (p1Paddle.y + paddleHeight)) {
+    if ((ball.x - p1Paddle.x) < paddleWidth
+        && ball.y > (p1Paddle.y - ballSize)
+        && ball.y < (p1Paddle.y + paddleHeight)) {
         sideSpeedball = sideSpeedball * -1;
+        ballSpeedMultiplier += ballSpeedMultiplierAdd;
     }
 
     //Collision detection on the p2 paddle
-    if ((ball.x + ballSize) > p2Paddle.x && (ball.y - ballSize) > p2Paddle.y && ball.y < (p2Paddle.y + paddleHeight)) {
+    if ((ball.x + ballSize) > p2Paddle.x
+        && ball.y > (p2Paddle.y - ballSize)
+        && ball.y < (p2Paddle.y + paddleHeight)) {
         sideSpeedball = sideSpeedball * -1;
+        ballSpeedMultiplier += ballSpeedMultiplierAdd;
+    }
+
+    //Collision Detection on the top and bottom border
+    if (ball.y < ball.minY || ball.y > ball.maxY) {
+        upwardSpeedBall = upwardSpeedBall * -1;
+        ballSpeedMultiplier += ballSpeedMultiplierAdd;
     }
 }
 
@@ -202,9 +205,9 @@ function drawScore() {
     var fontSizeText = 32;
     //sets the p1 score text
     p1ScoreText = new PIXI.Text(p1Score, {
-       fontFamily: "Arial",
-       fontSize: fontSizeText,
-       fill: "white"
+        fontFamily: "Arial",
+        fontSize: fontSizeText,
+        fill: "white"
     });
     //sets the p2 score text
     p2ScoreText = new PIXI.Text(p2Score, {
@@ -215,7 +218,7 @@ function drawScore() {
 
     //sets the position  
     p1ScoreText.position.set((width / 2) - 50, 50);
-    p2ScoreText.position.set((width / 2) + 50, 50);   
+    p2ScoreText.position.set((width / 2) + 50, 50);
     //Adds to the stage
     stage.addChild(p1ScoreText);
     stage.addChild(p2ScoreText);
@@ -241,7 +244,7 @@ function gameLoop() {
     //Moves the paddles
     paddlesControl();
     //Moves the ball
-    ballMovement()   
+    ballMovement()
 }
 
 // Start running the game.  
