@@ -21,7 +21,8 @@ var p2ScoreText;
 var upwardSpeedBall = 0;
 var sideSpeedball = 0;
 var ballSpeedMultiplier = 1;
-var ballSpeedMultiplierAdd = 0.05;
+var ballSpeedMultiplierAdd = 0.1;
+var sideDirection = 1;
 
 // Setup the rendering surface.
 var renderer = new PIXI.CanvasRenderer(width, height);
@@ -120,7 +121,7 @@ function getRndInteger(min, max) {
 //sets the ball speed and direction on setup
 function setBallSpeed(isReset, direction) {
     //set the direction to right
-    var sideDirection = 1;
+    sideDirection = 1;
     //set the direction to upward
     var horizontalDirection = 1;
     //if a random number is less than 0.5, then set the direction to left
@@ -136,13 +137,38 @@ function setBallSpeed(isReset, direction) {
         horizontalDirection = -1;
     }
     //sets the ball speed
-    sideSpeedball = sideDirection * getRndInteger(5, 10);
-    upwardSpeedBall = horizontalDirection * getRndInteger(1, 5);
+    sideSpeedball = sideDirection * getRndInteger(10, 15);
+    upwardSpeedBall = horizontalDirection * getRndInteger(5, 10);
 
     //reset the multiplier
     ballSpeedMultiplier = 1;
 }
 
+/*
+   This function controls the AI
+*/
+function moveAI() {
+
+    if (sideDirection == 1) {        
+        var y = ball.y;
+        if (y < p2Paddle.y) {
+            console.log(y);
+            if ((!(p2Paddle.y < borderSize + 10))) {
+                p2Paddle.y -= paddleSpeed;
+            }            
+        }
+
+        if (y > p2Paddle.y) {
+            if(!(p2Paddle.y > (height - borderSize - paddleHeight - 10))){
+                p2Paddle.y += paddleSpeed;
+            }           
+        }
+    }
+}
+
+/*
+   This function moves the ball
+*/
 function ballMovement() {
     //Moves the ball
     ball.x += sideSpeedball * ballSpeedMultiplier;
@@ -151,7 +177,6 @@ function ballMovement() {
     //check if p1 conceived a goal
     if (ball.x < ball.minX) {
         p2Score++;
-        console.log(p2Score);
         setBallSpeed(true, 1);
         ball.x = ball.minX + 130;
         ball.y = ball.minY + 130;
@@ -162,7 +187,6 @@ function ballMovement() {
     //check if p2 conceived a goal
     if (ball.x > ball.maxX) {
         p1Score++;
-        console.log(p1Score);
         setBallSpeed(true, -1);
         ball.x = ball.maxX - 130;
         ball.y = ball.minY + 130;
@@ -245,6 +269,8 @@ function gameLoop() {
     paddlesControl();
     //Moves the ball
     ballMovement()
+    //Moves the AI
+    moveAI();
 }
 
 // Start running the game.  
