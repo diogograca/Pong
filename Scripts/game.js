@@ -13,9 +13,13 @@ var paddleWidth = 20;
 var paddleSpeed = 15;
 var p1Score = 0;
 var p2Score = 0
+var numberOfAi = 0;
 
 var p1ScoreText;
 var p2ScoreText;
+
+//game settings
+var hasGameStarted = false;
 
 //ball speed   
 var upwardSpeedBall = 0;
@@ -39,6 +43,33 @@ addEventListener("keydown", function (e) {
     keysDown[e.keyCode] = true;
     //e.preventDefault();
     //e.stopImmediatePropagation();
+    if (!hasGameStarted) {
+        if ((e.keyCode == 32) || (e.keyCode == 49) || (e.keyCode == 50)) { // Player pressed space, 1 or 2
+            //Draws the Score
+            drawScore();
+            //sets the game to started
+            hasGameStarted = true;
+        }
+
+        if (e.keyCode == 32) { // Player pressed space        
+            //sets the number of ai
+            console.log(0);
+            numberOfAi = 0;
+        }
+
+        if (e.keyCode == 49) { // Player pressed 1          
+            //sets the number of ai
+            console.log(1);
+            numberOfAi = 1;
+        }
+
+        if (e.keyCode == 50) { // Player pressed 2          
+            //sets the number of ai
+            console.log(2);
+            numberOfAi = 2;
+        }
+    }
+
 }, false);
 //Key up event
 addEventListener("keyup", function (e) {
@@ -89,26 +120,34 @@ function setupScenario() {
 }
 
 function paddlesControl() {
+    //if it's 2 Ais playing, dont check anything
+    if (numberOfAi < 2) {
+      
+            if (38 in keysDown) { // Player 2 holding Up Arrow         
+                if (!(p2Paddle.y < borderSize + 10)) {
+                    p2Paddle.y -= paddleSpeed;
+                }
+            }
+            if (40 in keysDown) { // Player holding 2 Down Arrow           
+                if (!(p2Paddle.y > (height - borderSize - paddleHeight - 10))) {
+                    p2Paddle.y += paddleSpeed;
+                }
+            }
+        //Checks if there's one AI playing
+        if (numberOfAi != 1) {
 
-    if (87 in keysDown) { // Player1 holding W key Down (go up)            
-        if (!(p1Paddle.y < borderSize + 10)) {
-            p1Paddle.y -= paddleSpeed;
-        }
-    }
-    if (83 in keysDown) { // Player1 holding S key Down (go down)            
-        if (!(p1Paddle.y > (height - borderSize - paddleHeight - 10))) {
-            p1Paddle.y += paddleSpeed;
-        }
-    }
+            if (87 in keysDown) { // Player1 holding W key Down (go up)            
+                if (!(p1Paddle.y < borderSize + 10)) {
+                    p1Paddle.y -= paddleSpeed;
+                }
+            }
+            if (83 in keysDown) { // Player1 holding S key Down (go down)            
+                if (!(p1Paddle.y > (height - borderSize - paddleHeight - 10))) {
+                    p1Paddle.y += paddleSpeed;
+                }
+            }
 
-    if (38 in keysDown) { // Player 2 holding Up Arrow         
-        if (!(p2Paddle.y < borderSize + 10)) {
-            p2Paddle.y -= paddleSpeed;
-        }
-    }
-    if (40 in keysDown) { // Player holding 2 Down Arrow           
-        if (!(p2Paddle.y > (height - borderSize - paddleHeight - 10))) {
-            p2Paddle.y += paddleSpeed;
+
         }
     }
 }
@@ -137,31 +176,67 @@ function setBallSpeed(isReset, direction) {
         horizontalDirection = -1;
     }
     //sets the ball speed
-    sideSpeedball = sideDirection * getRndInteger(10, 15);
-    upwardSpeedBall = horizontalDirection * getRndInteger(5, 10);
+    sideSpeedball = sideDirection * getRndInteger(5, 10);
+    upwardSpeedBall = horizontalDirection * getRndInteger(2, 5);
 
     //reset the multiplier
     ballSpeedMultiplier = 1;
 }
 
 /*
+    This function checks if its game over
+*/
+function hasGameEnded() {
+    if (p1Score > 9 || p2Score > 9) {
+        hasGameStarted = false;
+        //reset the game variables
+        resetGame();
+    }
+}
+
+/*
+ This function resets the game variables
+*/
+function resetGame() {
+    //resets score
+    p1Score = 0;
+    p2Score = 0;
+    //numberOfAi
+    numberOfAi = 0
+    //set the ball speed
+    setBallSpeed(false, 0);
+}
+
+/*
    This function controls the AI
 */
 function moveAI() {
-
-    if (sideDirection == 1) {        
-        var y = ball.y;
-        if (y < p2Paddle.y) {
-            console.log(y);
+    var y = ball.y;
+    //only move ps if its 2 AI and its going towards p2
+    if (sideDirection == 1 && (numberOfAi == 2)) {
+        if (y < (p2Paddle.y + (p2Paddle.height / 2))) {
             if ((!(p2Paddle.y < borderSize + 10))) {
                 p2Paddle.y -= paddleSpeed;
-            }            
+            }
         }
 
-        if (y > p2Paddle.y) {
-            if(!(p2Paddle.y > (height - borderSize - paddleHeight - 10))){
+        if (y > (p2Paddle.y + (p2Paddle.height / 2))) {
+            if (!(p2Paddle.y > (height - borderSize - paddleHeight - 10))) {
                 p2Paddle.y += paddleSpeed;
-            }           
+            }
+        }
+    //only move p1 if its at least 1 AI and its going towards p1
+    } else  if(sideDirection == -1 && (numberOfAi > 0)){
+        if (y < (p1Paddle.y + (p1Paddle.height / 2))) {
+            if ((!(p1Paddle.y < borderSize + 10))) {
+                p1Paddle.y -= paddleSpeed;
+            }
+        }
+
+        if (y > (p1Paddle.y + (p1Paddle.height / 2))) {
+            if (!(p1Paddle.y > (height - borderSize - paddleHeight - 10))) {
+                p1Paddle.y += paddleSpeed;
+            }
         }
     }
 }
@@ -200,6 +275,7 @@ function ballMovement() {
         && ball.y < (p1Paddle.y + paddleHeight)) {
         sideSpeedball = sideSpeedball * -1;
         ballSpeedMultiplier += ballSpeedMultiplierAdd;
+        sideDirection = 1;
     }
 
     //Collision detection on the p2 paddle
@@ -208,6 +284,7 @@ function ballMovement() {
         && ball.y < (p2Paddle.y + paddleHeight)) {
         sideSpeedball = sideSpeedball * -1;
         ballSpeedMultiplier += ballSpeedMultiplierAdd;
+        sideDirection = -1;
     }
 
     //Collision Detection on the top and bottom border
@@ -253,11 +330,12 @@ function setup() {
     document.body.appendChild(renderer.view);
     // Begin the first frame
     setupScenario();
-    gameLoop();
     //set the ball speed
     setBallSpeed(false, 0);
     //Draws the Score
     drawScore();
+    //game Loop
+    gameLoop();
 }
 //Game loop, called at each frame
 function gameLoop() {
@@ -265,12 +343,17 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
     // Render the stage for the current frame.
     renderer.render(stage);
-    //Moves the paddles
-    paddlesControl();
-    //Moves the ball
-    ballMovement()
-    //Moves the AI
-    moveAI();
+    //if the game has started check game logic
+    if (hasGameStarted) {
+        //Moves the paddles
+        paddlesControl();
+        //Moves the ball
+        ballMovement()
+        //Moves the AI
+        moveAI();
+        //checks if its game over
+        hasGameEnded();
+    }
 }
 
 // Start running the game.  
